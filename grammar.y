@@ -158,7 +158,7 @@ inst:
     expr TOK_SEMICOL
         { $$ = NULL; }
         | TOK_IF TOK_LPAR expr TOK_RPAR inst TOK_ELSE inst
-        { $$ = NULL; }
+        { $$ = make_node(NODE_IF,2,$1,$3  ); }
         | TOK_IF TOK_LPAR expr TOK_RPAR inst %prec TOK_THEN
         { $$ = NULL; }
         | TOK_WHILE TOK_LPAR expr TOK_RPAR inst
@@ -229,13 +229,13 @@ expr: expr TOK_MULT expr
         | ident TOK_AFFECT expr
             {$$ = make_node(NODE_AFFECT, 2, $1, $2);}
         | TOK_INTVAL
-            {$$ = make_node;}
+            {$$ = make_node(NODE_INTVAL, 1, $1);}
         | TOK_TRUE
-            {$$ = NULL;}
+            {$$ = make_node(NODE_TRUE, 1 $1);}
         | TOK_FALSE
-            {$$ = NULL;}
+            {$$ = make_node(NODE_FALSE, 1, $1);}
         | ident
-            {$$ = NULL;}    
+            {$$ = make_node(NODE_IDENT, 1,, $1);}    
         ;
 
 listparamprint: listparamprint TOK_COMMA paramprint
