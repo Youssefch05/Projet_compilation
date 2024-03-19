@@ -40,10 +40,10 @@ IDF                 {LETTRE}({LETTRE}|{CHIFFRE}|_)*
 CHAINE              \"[^"]*\"
 COMMENTAIRE         "//"({LETTRE}|{CHIFFRE})*
 CHIFFRE_NON_NUL     [1-9]
-ENTIER_DEC          (0|CHIFFRE|{CHIFFRE_NON_NUL} ({CHIFFRE})*)
+ENTIER_DEC          0|{CHIFFRE_NON_NUL}{CHIFFRE}*
 LETTRE_HEXA         [a-fA-F]
-ENTIER_HEXA         (0x|({CHIFFRE}|{LETTRE_HEXA})+)
-ENTIER              {ENTIER_DEC | ENTIER_HEXA}
+ENTIER_HEXA         0x({CHIFFRE}|{LETTRE_HEXA})+
+ENTIER              {ENTIER_DEC}|{ENTIER_HEXA}
 
 %%
       
@@ -59,7 +59,7 @@ ENTIER              {ENTIER_DEC | ENTIER_HEXA}
 "print"         RETURN(TOK_PRINT);
 "do"            RETURN(TOK_DO);
 "+"             RETURN(TOK_PLUS);
-"*"             RETURN(TOK_MULT);
+"*"             RETURN(TOK_MUL);
 "-"             RETURN(TOK_MINUS);
 "/"             RETURN(TOK_DIV);
 "%"             RETURN(TOK_MOD);
@@ -99,7 +99,7 @@ ENTIER              {ENTIER_DEC | ENTIER_HEXA}
                 RETURN(TOK_IDENT);
 }
 
-{CHIFFRE} {
+{ENTIER} {
                 #if !LEX_DEBUG
                 /* A completer : affecter yylval.intval et faire des verifications */
                 yylval.intval = atoi(yytext);
@@ -119,6 +119,9 @@ ENTIER              {ENTIER_DEC | ENTIER_HEXA}
 {COMMENTAIRE} {
     
 }
+
+
+
 
 
 [ \t\n]+

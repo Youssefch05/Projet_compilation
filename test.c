@@ -1,14 +1,14 @@
-int var_a  = 9;
-9 > 19
-9 + 8
-1 == 7
-"chaine99\n"
-true
-false 
-//abcpdfe9902
-if 
-else
-for
-then
-1 () " " {} ! = ^ ~ % != >>> << >= <= < > >>
-0x1293
+
+
+ int start = 0;
+ int end = 100;
+
+ void main () {
+ int i , s = start , e = end ;
+ int sum = 0;
+ for ( i = s ; i < e ; i = i + 1) {
+ sum = sum + i ;
+ }
+ print ( " sum : " , sum , " \ n " ) ;
+
+ }

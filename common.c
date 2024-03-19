@@ -29,7 +29,17 @@ void parse_args(int argc, char ** argv) {
 
 
 void free_nodes(node_t n) {
-    // A implementer
+   if(n->opr[0]!=NULL){
+        free(n->opr[0]);
+    }
+   if(n->opr[1]!=NULL){
+    free(n->opr[1]);
+   } 
+   if(n->opr[2]!=NULL){
+    free(n->opr[2]);
+   }
+
+   free(n);
 }
 
 
