@@ -98,7 +98,7 @@ void yyerror(node_t * program_root, char * s);
 void analyse_tree(node_t root);
 node_t make_node(node_nature nature, int nops, ...);
 /* A completer */
-node_t make_node_type(node_type type);
+node_t make_node_type(int type);
 node_t make_node_boolval( int value);
 node_t make_node_intval( int value);
 node_t make_node_stringval(char *str);
@@ -1660,13 +1660,13 @@ yyreduce:
 
   case 14:
 #line 142 "grammar.y"
-        { (yyval.ptr) = (yyvsp[0].ptr); }
+    { (yyval.ptr) = make_node(NODE_DECL,2,(yyvsp[0].ptr),NULL); }
 #line 1665 "y.tab.c"
     break;
 
   case 15:
 #line 144 "grammar.y"
-        { (yyval.ptr) = make_node(NODE_DECL,2,(yyvsp[-2].ptr),(yyvsp[0].ptr)); }
+    { (yyval.ptr) = make_node(NODE_DECL,2,(yyvsp[-2].ptr),(yyvsp[0].ptr)); }
 #line 1671 "y.tab.c"
     break;
 
@@ -2199,7 +2199,6 @@ void initialize_terminal_node(node_t t){
     t->opr = NULL;
     t->lineno = yylineno;
 
-
 }   
 
 /* A completer et/ou remplacer avec d'autres fonctions */
@@ -2225,9 +2224,7 @@ node_t make_node(node_nature nature, int nops, ...) {
 }
 
 node_t make_node_boolval(int value){
-    node_t t = malloc(sizeof(node_s));
-    t->nature = NODE_BOOLVAL;
-    t->value = value;
+    node_t t = malloc(sizeof(node_s)); 
     initialize_terminal_node(t);
 
     return t;
@@ -2259,7 +2256,7 @@ node_t make_node_ident(char *nom){
     return t;
 }
 
-node_t make_node_type(node_type type){
+node_t make_node_type(int type){
     node_t t = malloc(sizeof(node_s));
     initialize_terminal_node(t);
 

@@ -29,7 +29,7 @@ void yyerror(node_t * program_root, char * s);
 void analyse_tree(node_t root);
 node_t make_node(node_nature nature, int nops, ...);
 /* A completer */
-node_t make_node_type(node_type type);
+node_t make_node_type(int type);
 node_t make_node_boolval( int value);
 node_t make_node_intval( int value);
 node_t make_node_stringval(char *str);
@@ -132,16 +132,16 @@ type:
 
 listtypedecl: 
         decl
-            { $$ = $1; }   
+            { $$ = $1; }      
             | listtypedecl TOK_COMMA decl
             { $$ = make_node(NODE_LIST, 2, $1, $3); }
             ;
 
 decl:
     ident
-        { $$ = $1; }
-        | ident TOK_AFFECT expr 
-        { $$ = make_node(NODE_DECL,2,$1,$3); }
+    { $$ = make_node(NODE_DECL,2,$1,NULL); }
+    | ident TOK_AFFECT expr 
+    { $$ = make_node(NODE_DECL,2,$1,$3); }
         ;
 
 maindecl:
@@ -268,7 +268,6 @@ void initialize_terminal_node(node_t t){
     t->opr = NULL;
     t->lineno = yylineno;
 
-
 }   
 
 /* A completer et/ou remplacer avec d'autres fonctions */
@@ -294,9 +293,7 @@ node_t make_node(node_nature nature, int nops, ...) {
 }
 
 node_t make_node_boolval(int value){
-    node_t t = malloc(sizeof(node_s));
-    t->nature = NODE_BOOLVAL;
-    t->value = value;
+    node_t t = malloc(sizeof(node_s)); 
     initialize_terminal_node(t);
 
     return t;
@@ -328,7 +325,7 @@ node_t make_node_ident(char *nom){
     return t;
 }
 
-node_t make_node_type(node_type type){
+node_t make_node_type(int type){
     node_t t = malloc(sizeof(node_s));
     initialize_terminal_node(t);
 
