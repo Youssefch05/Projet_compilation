@@ -1804,7 +1804,7 @@ yyreduce:
 
   case 38:
 #line 205 "grammar.y"
-            { (yyval.ptr) = make_node(NODE_MINUS, 1, (yyvsp[0].ptr)); }
+            { (yyval.ptr) = make_node(NODE_UMINUS, 1, (yyvsp[0].ptr)); }
 #line 1809 "y.tab.c"
     break;
 
@@ -2225,6 +2225,8 @@ node_t make_node(node_nature nature, int nops, ...) {
 
 node_t make_node_boolval(int value){
     node_t t = malloc(sizeof(node_s)); 
+    t->nature = NODE_BOOLVAL;
+    t->value = value;
     initialize_terminal_node(t);
 
     return t;
@@ -2273,7 +2275,7 @@ void analyse_tree(node_t root) {
     dump_tree(root, "apres_syntaxe.dot");
     if (!stop_after_syntax) {
         analyse_passe_1(root);
-        //dump_tree(root, "apres_passe_1.dot");
+        dump_tree(root, "apres_passe_1.dot");
         if (!stop_after_verif) {
             create_program(); 
             gen_code_passe_2(root);

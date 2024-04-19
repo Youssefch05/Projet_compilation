@@ -6,6 +6,8 @@
 
 #include "defs.h"
 #include "common.h"
+#include "passe_1.h"
+
 
 #include "y.tab.h"
 
@@ -37,13 +39,14 @@ extern int yydebug;
 LETTRE              [a-zA-Z]
 CHIFFRE             [0-9]
 IDF                 {LETTRE}({LETTRE}|{CHIFFRE}|_)*
-CHAINE              \"[^"]*\"
-COMMENTAIRE         "//"({LETTRE}|{CHIFFRE})*
+CHAINE_CAR          [^\"\\]*
+COMMENTAIRE         "//"(.*)
 CHIFFRE_NON_NUL     [1-9]
 ENTIER_DEC          0|{CHIFFRE_NON_NUL}{CHIFFRE}*
 LETTRE_HEXA         [a-fA-F]
 ENTIER_HEXA         0x({CHIFFRE}|{LETTRE_HEXA})+
 ENTIER              {ENTIER_DEC}|{ENTIER_HEXA}
+CHAINE              \"({CHAINE_CAR}|(\\n)|(\\\"))*\"
 
 %%
       
@@ -153,6 +156,10 @@ int main(int argc, char ** argv) {
         yyparse(&program_root);
         fclose(yyin);
         analyse_tree(program_root);
+        
+
+        
+
     #endif
     yylex_destroy();
     return 0;

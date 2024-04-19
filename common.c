@@ -31,14 +31,27 @@ void parse_args(int argc, char ** argv) {
 void free_nodes(node_t n) {
    if(n->opr[0]!=NULL){
         free(n->opr[0]);
+        n->opr[0]=NULL;
     }
    if(n->opr[1]!=NULL){
     free(n->opr[1]);
+    n->opr[1]=NULL;
    } 
    if(n->opr[2]!=NULL){
     free(n->opr[2]);
+    n->opr[2]=NULL;
    }
-
+/*
+   if(n->opr[3]!=NULL){
+    free(n->opr[3]);
+        n->opr[3]=NULL;
+    
+   }
+   */
+    free(n->str);
+    n->str=NULL;
+    free(n->ident);
+    n->ident=NULL;
    free(n);
 }
 

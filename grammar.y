@@ -202,7 +202,7 @@ expr: expr TOK_MUL expr
         | expr TOK_GT expr
             { $$ = make_node(NODE_GT, 2, $1, $3) ; }
         | TOK_MINUS expr %prec TOK_UMINUS
-            { $$ = make_node(NODE_MINUS, 1, $2); }
+            { $$ = make_node(NODE_UMINUS, 1, $2); }
         | expr TOK_GE expr
             { $$ = make_node(NODE_GE, 2, $1, $3); }
         | expr TOK_LE expr
@@ -240,7 +240,7 @@ expr: expr TOK_MUL expr
         | TOK_TRUE
             {$$ = make_node_boolval(1);}
         | TOK_FALSE
-            {$$ = make_node_boolval(0);}
+            {$$ = make_node_boolval(0);}   
         | ident
             {$$ = $1;}    
         ;
@@ -294,6 +294,8 @@ node_t make_node(node_nature nature, int nops, ...) {
 
 node_t make_node_boolval(int value){
     node_t t = malloc(sizeof(node_s)); 
+    t->nature = NODE_BOOLVAL;
+    t->value = value;
     initialize_terminal_node(t);
 
     return t;
@@ -342,7 +344,7 @@ void analyse_tree(node_t root) {
     dump_tree(root, "apres_syntaxe.dot");
     if (!stop_after_syntax) {
         analyse_passe_1(root);
-        //dump_tree(root, "apres_passe_1.dot");
+        dump_tree(root, "apres_passe_1.dot");
         if (!stop_after_verif) {
             create_program(); 
             gen_code_passe_2(root);
