@@ -232,7 +232,7 @@ expr: expr TOK_MUL expr
         | TOK_BNOT expr
             { $$ = make_node(NODE_BNOT, 1, $2) ; }
         | TOK_LPAR expr TOK_RPAR 
-            {$$ = make_node(NONE,1,$2) ;}
+            {$$ = $2 ;}
         | ident TOK_AFFECT expr
             {$$ = make_node(NODE_AFFECT, 2, $1, $3);}
         | TOK_INTVAL
@@ -304,6 +304,7 @@ node_t make_node_boolval(int value){
 node_t make_node_intval(int value){
     node_t t = malloc(sizeof(node_s));
     t->nature = NODE_INTVAL;
+    t->type = TYPE_INT;
     t->value = value;
     initialize_terminal_node(t);
     return t;

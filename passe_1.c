@@ -11,35 +11,11 @@
 static bool global =true; //semaphore pour passer ou non le global_decl du node a true ou false et changé lors de l'entrée dans maindelc
 
 
-int analyse_decl(bool global,node_t node,node_type type ){
-    if(global){
-    //vérifier que la variable est initialisée par une constante et pas une autre variable int a = b;
-    if(node->opr[1]->nature==NODE_BOOLVAL || node->opr[1]->nature==NODE_INTVAL ||node->opr[1]==NULL ){
 
     
-    node->type = type; // faire passer le type à travers l'arbre sur les noeux ident
-    env_add_element(node->ident,node); 
-    
-    }
-    else{
 
-        printf("erreur line %d: syntax error", node->lineno);
-    }
-    
-
-
-    }
-    else{
-        //dans ce cas verif que var fait verif type et tout jsp si c fait dans get_decl_node
-
-        //if(get_decl_node()) //verifier si la var est init avec une autre var que cette var utilisée esxiste
-        node->type = node->decl_node->type;
-
-        } //dans le cas ou on à int c =d ; avec d deja défini dans le contexte il faut remonter à la valeur de c connue dans le contexte
 
             
-
-    }
 
     
    
@@ -142,32 +118,39 @@ void parcours_global_arbre(node_t root){
             parcours_global_arbre(root->opr[1]); //rajouter intval
             
             }
-               
+            if(root->opr[0]!=NULL && root->opr[1]!=NULL){
+            if(root->opr[0]->type!=root->opr[1]->type && global==1){
+                printf("Error line %d: global var only with literral",root->lineno);
+                exit(-1);
+            
+            
+            }
 
+            if(root->opr[1]->nature==NODE_IDENT&&root->opr[1]->decl_node==NULL&&global==0){
+
+                printf("Error line %d: variable non déclarée",root->lineno);
+                exit(1);
+
+            }
+        
+            }
+        
 
         break;
 
-        case(NODE_IDENT): //appeler analyse_decl ici    
-        //analyse_decl(global,root,type);
+        case(NODE_IDENT):  
+        
         root->global_decl = global;
         root->decl_node=root;
-        //printf("%d   %s",global,root->ident);
-        //root->offset = env_add_element(root->ident,root);
         if(root->global_decl==0){
             root->decl_node = get_decl_node(root->ident);
-            if(root->decl_node!=NULL){
-                root->type=root->decl_node->type;
-            }
+           
             
 
-            //root->type = root->decl_node->type;
-       // printf(" %s  ",root->decl_node->ident);
+            
         }
-        //printf("%d\t",root->type);
 
-        //get_env_current_offset();    
-        //push_context(); 
-        //printf(" %s \n",root->ident);
+        
             break;
 
         case(NODE_BLOCK):
@@ -191,8 +174,13 @@ void parcours_global_arbre(node_t root){
         if(root->opr[3]!=NULL){
         parcours_global_arbre(root->opr[3]);
         }
+        if(root->opr[1]->type!=TYPE_BOOL){
+            printf("Error line %d: condition booleene nécessaire",root->lineno);
+            exit(-1);
+        }
             break;
 
+    
         case(NODE_IF):
         parcours_global_arbre(root->opr[0]);
         if(root->opr[1]!=NULL){
@@ -202,6 +190,10 @@ void parcours_global_arbre(node_t root){
         if(root->opr[2]!=NULL){
         parcours_global_arbre(root->opr[2]);
         }
+        if(root->opr[0]->type!=TYPE_BOOL){
+            printf("Error line %d: condition de type booleene ", root->lineno);
+            exit(-1);
+        }
 
         break;
 
@@ -210,6 +202,10 @@ void parcours_global_arbre(node_t root){
         if(root->opr[1]!=NULL){
                 parcours_global_arbre(root->opr[1]);
         }
+        if(root->opr[0]->type!=TYPE_BOOL){
+            printf("Error line %d: condition de type booleene ", root->lineno);
+            exit(-1);
+        }
 
         break;
         case(NODE_DOWHILE):
@@ -217,47 +213,116 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         }
         parcours_global_arbre(root->opr[1]);
+         if(root->opr[1]->type!=TYPE_BOOL){
+            printf("Error line %d: condition de type booleene ", root->lineno);
+            exit(-1);
+        }
         break;
 
         case(NODE_AFFECT):
 
         
         parcours_global_arbre(root->opr[0]);
-        root->type=root->opr[0]->type;
+        if(root->opr[0]->decl_node!=NULL){
+        root->type=root->opr[0]->decl_node->type;
+        }
         parcours_global_arbre(root->opr[1]);
-        /*if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
-        exit(-1);
-            
-        }*/
 
-        break;
+        if(root->opr[0]->decl_node!=NULL){
+        if(root->opr[0]->nature==NODE_IDENT&&root->opr[0]->decl_node==NULL){
 
-        case(NODE_LT):
-        
-        parcours_global_arbre(root->opr[0]);
-        root->type=TYPE_BOOL;
-        parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+                printf("Error line %d: variable non déclarée",root->lineno);
+                exit(-1);
+
+            }
+        }
+
+        if(root->opr[1]->decl_node!=NULL){
+        if(root->opr[1]->nature==NODE_IDENT&&root->opr[1]->decl_node==NULL){
+
+                printf("Error line %d: variable non déclarée",root->lineno);
+                exit(-1);
+
+            }
+        }
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+    
+        printf("Error line %d: types should be identical IN affect",root->lineno);
         exit(-1);
             
         }
 
+        }
+        else{
+            if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=root->opr[1]->type){
+                if(root->opr[0]->offset==-1){
+
+                }
+                printf("Error line %d: types should be identical IN affect",root->lineno);
+                exit(-1);
+            
         
+        }
+
+            }
+            }
+        
+        
+
+
+
+        break;
+
+        case(NODE_LT):
+        root->type=TYPE_BOOL;
+        parcours_global_arbre(root->opr[0]);
+        root->type=TYPE_BOOL;
+        parcours_global_arbre(root->opr[1]);
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+        printf("Error line %d: types should be identical IN lt",root->lineno);
+        exit(-1);
+            
+        }
+
+        }
+
 
         break;
 
         case(NODE_GT):
 
-        
+        root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[0]);
-         root->type=TYPE_BOOL;
+         
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+         if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
+        }
+        
+
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
         }
 
 
@@ -265,39 +330,82 @@ void parcours_global_arbre(node_t root){
 
 
         case(NODE_LE):
-        
+        root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[0]);
-         root->type=TYPE_BOOL;
+         
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+          if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
+
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+
 
 
         break;
      
         case(NODE_GE):
-        
+        root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[0]);
-         root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+          if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
+
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+
+        
 
 
         break;
  
         case(NODE_BOR):
-        
+        root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[0]);
-         root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
+         if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
         printf("Error line %d: types should be identical",root->lineno);
         exit(-1);
             
@@ -309,18 +417,43 @@ void parcours_global_arbre(node_t root){
         case(NODE_PLUS):
         
         parcours_global_arbre(root->opr[0]);
-        root->type=root->opr[0]->type;
+        if(root->opr[0]->decl_node!=NULL){
+        root->type=root->opr[0]->decl_node->type;
+        }
+        
+        
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+         if(root->opr[1]->decl_node!=NULL){
+            root->type = root->opr[1]->decl_node->type;
+    }
+        
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
 
-        if(root->opr[0]->type!=TYPE_INT||root->opr[1]->type!=TYPE_INT){
-            printf("Error line %d: opération uniquement sur les int",root->lineno);
-            exit(-1);
-            
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+            if(root->opr[1]->decl_node!=NULL){
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+            }
+
         }
 
 
@@ -331,19 +464,32 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         root->type=root->opr[0]->type;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
-        exit(-1);
-        
-        }
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
 
-         if(root->opr[0]->type!=TYPE_INT||root->opr[1]->type!=TYPE_INT){
-            printf("Error line %d: opération uniquement sur les int",root->lineno);
-            exit(-1);
+        printf("Error line %d: types should be identical in node ",root->lineno);
+        exit(-1);
             
         }
         
 
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
 
 
         break;
@@ -353,18 +499,32 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         root->type=root->opr[0]->type;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
 
-         if(root->opr[0]->type!=TYPE_INT||root->opr[1]->type!=TYPE_INT){
-            printf("Error line %d: opération uniquement sur les int",root->lineno);
-            exit(-1);
-            
         }
 
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
 
         break;
 
@@ -373,18 +533,34 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         root->type=root->opr[0]->type;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+                
+       if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
 
-         if(root->opr[0]->type!=TYPE_INT||root->opr[1]->type!=TYPE_INT){
-            printf("Error line %d: opération uniquement sur les int",root->lineno);
-            exit(-1);
-            
         }
 
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+        
 
         break;
 
@@ -393,17 +569,33 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         root->type=root->opr[0]->type;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type ){
-        printf("Error line %d: les variables doivent être de même type\n",root->lineno);
+        
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
-         if(root->opr[0]->type!=TYPE_INT || root->opr[1]->type!=TYPE_INT ){
-        printf("Error line %d: modulo sur les entiers seulement\n",root->lineno);
-        exit(-1);
-            
+        
+
         }
 
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
         break;
 
 
@@ -411,12 +603,13 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-         if(root->opr[0]->type!=root->opr[1]->type){
+         if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+         if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
         printf("Error line %d: types should be identical",root->lineno);
         exit(-1);
             
         }
-
+         }
         break;
 
         case(NODE_NE):
@@ -424,10 +617,12 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+         if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
         printf("Error line %d: types should be identical",root->lineno);
         exit(-1);
             
+        }
         }
 
         break;
@@ -437,12 +632,34 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
         root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
 
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+            if(root->opr[1]->decl_node!=NULL){
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+        }
 
         break;
 
@@ -451,11 +668,33 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
+
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+        
 
 
         break;
@@ -464,7 +703,7 @@ void parcours_global_arbre(node_t root){
         parcours_global_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
 
-          if(root->opr[0]->type!=TYPE_INT){
+          if(root->opr[0]->decl_node->type!=TYPE_INT){
             printf("Error line %d: opération uniquement sur les int",root->lineno);
             exit(-1);
             
@@ -479,11 +718,34 @@ void parcours_global_arbre(node_t root){
          root->type=TYPE_BOOL;
         parcours_global_arbre(root->opr[1]);
         
-        if(root->opr[0]->type!=root->opr[1]->type){
-        printf("Error line %d: types should be identical",root->lineno);
+        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
         exit(-1);
             
         }
+        
+
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+            
+        
 
 
         break;
@@ -491,6 +753,12 @@ void parcours_global_arbre(node_t root){
         case(NODE_NOT):
         parcours_global_arbre(root->opr[0]);
           root->type=TYPE_BOOL;
+
+          if(root->opr[0]->decl_node->type!=TYPE_BOOL){
+            printf("Error line %d: type should be bool",root->lineno);
+        exit(-1);
+            
+          }  
         
             
     
@@ -506,14 +774,7 @@ void parcours_global_arbre(node_t root){
            
         parcours_global_arbre(root->opr[1]);
 
-
-        break;
-
-        case(NODE_SRL):
-          parcours_global_arbre(root->opr[0]);
-          root->type=root->opr[0]->type;
-        parcours_global_arbre(root->opr[1]);
-        if(root->opr[0]->type!=root->opr[1]->type){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->type){
         printf("Error line %d: types should be identical",root->lineno);
         exit(-1);
             
@@ -522,11 +783,44 @@ void parcours_global_arbre(node_t root){
 
         break;
 
+        case(NODE_SRL):
+          parcours_global_arbre(root->opr[0]);
+          root->type=root->opr[0]->type;
+        parcours_global_arbre(root->opr[1]);
+        if(root->opr[0]->decl_node->type!=root->opr[1]->type){
+        printf("Error line %d: types should be identical",root->lineno);
+        exit(-1);
+            
+        }
+
+        case(NODE_SRA):
+         parcours_global_arbre(root->opr[0]);
+          root->type=root->opr[0]->type;
+        parcours_global_arbre(root->opr[1]);
+        if(root->opr[0]->decl_node->type!=root->opr[1]->type){
+        printf("Error line %d: types should be identical",root->lineno);
+        exit(-1);
+
+        }
+
+
+        break;
+
         case(NODE_UMINUS):
           parcours_global_arbre(root->opr[0]);
           root->type=root->opr[0]->type;
-          if(root->opr[0]->type!=TYPE_INT){
+          if(root->opr[0]->decl_node!=NULL){
+          if(root->opr[0]->decl_node->type!=TYPE_INT){
             printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+          }
+          } 
+          else{
+            if(root->opr[0]->type!=TYPE_INT){
+            printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+
+          }
           }
         break;
 
@@ -536,6 +830,7 @@ void parcours_global_arbre(node_t root){
         break;
 
         case(NODE_INTVAL):
+        root->type = TYPE_INT;              
             break;
 
         case(NODE_STRINGVAL):
@@ -579,11 +874,11 @@ void parcours_global_arbre(node_t root){
     
         default:
         break;
-    }
+    
         
 
 
-          
+    }      
          
     
 

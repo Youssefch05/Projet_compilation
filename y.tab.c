@@ -1894,7 +1894,7 @@ yyreduce:
 
   case 53:
 #line 235 "grammar.y"
-            {(yyval.ptr) = make_node(NONE,1,(yyvsp[-1].ptr)) ;}
+            {(yyval.ptr) = (yyvsp[-1].ptr) ;}
 #line 1899 "y.tab.c"
     break;
 
@@ -2235,6 +2235,7 @@ node_t make_node_boolval(int value){
 node_t make_node_intval(int value){
     node_t t = malloc(sizeof(node_s));
     t->nature = NODE_INTVAL;
+    t->type = TYPE_INT;
     t->value = value;
     initialize_terminal_node(t);
     return t;

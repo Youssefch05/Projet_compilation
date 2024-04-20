@@ -2,7 +2,7 @@
 
 
 int b = 5;
-void main() {
+int main() {
    int a =10;
    int i=0;
    if(a<1){
