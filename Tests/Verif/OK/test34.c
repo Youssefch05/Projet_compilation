@@ -1,8 +1,7 @@
-
+//error line 4
 void main(){
-    
     bool b = true;
-    bool c = b == false;
+    int c = 12&14;
     
 
     

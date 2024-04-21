@@ -80,7 +80,7 @@ void verif_type_binaire_int(node_t root){
         if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
 
         printf("Error line %d: les types doivent être identiques\n",root->lineno);
-        //exit(-1);
+        exit(-1);
             
         }
         }
@@ -89,7 +89,7 @@ void verif_type_binaire_int(node_t root){
             if(root->opr[0]->decl_node->type!=TYPE_INT){
 
                      printf("Error line %d: type incorrect\n",root->lineno);
-        //exit(-1);
+        exit(-1);
             }
         }
         else{
@@ -97,7 +97,7 @@ void verif_type_binaire_int(node_t root){
              if(root->opr[1]->decl_node->type!=TYPE_INT){
 
                      printf("Error line %d: type incorrect\n",root->lineno);
-        //exit(-1);
+        exit(-1);
             }
             }   
         }

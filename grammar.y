@@ -287,7 +287,12 @@ node_t make_node(node_nature nature, int nops, ...) {
          
         
     }
-    
+    t->str = NULL;
+    t->decl_node= NULL;
+    t->ident=NULL;
+    t->type=TYPE_NONE;
+    t->global_decl=false;
+    t->offset=0;
     va_end(ap);
     return t;
 }
@@ -295,6 +300,7 @@ node_t make_node(node_nature nature, int nops, ...) {
 node_t make_node_boolval(int value){
     node_t t = malloc(sizeof(node_s)); 
     t->nature = NODE_BOOLVAL;
+    t->type =TYPE_BOOL;
     t->value = value;
     initialize_terminal_node(t);
 
@@ -315,7 +321,7 @@ node_t make_node_stringval(char *str){
     t->nature = NODE_STRINGVAL;
     initialize_terminal_node(t);
 
-    t->str = str;
+    t->str = strdupl(str);
     return t; 
 }
 
@@ -323,7 +329,7 @@ node_t make_node_ident(char *nom){
     node_t t = malloc(sizeof(node_s));
     initialize_terminal_node(t);
     t->nature = NODE_IDENT ;
-    t->ident = nom;
+    t->ident = strdupl(nom);
 
     return t;
 }

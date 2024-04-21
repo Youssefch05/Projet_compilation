@@ -201,25 +201,20 @@ void parse_args(int argc, char ** argv) {
 
 
 void free_nodes(node_t n) {
-   if(n->opr[0]!=NULL){
-        free(n->opr[0]);
-        n->opr[0]=NULL;
+
+    int i = 0;
+    if(n == NULL){
+        return;
     }
-   if(n->opr[1]!=NULL){
-    free(n->opr[1]);
-    n->opr[1]=NULL;
-   } 
-   if(n->opr[2]!=NULL){
-    free(n->opr[2]);
-    n->opr[2]=NULL;
+   while(i<n->nops){
+   if(n->opr[i]!=NULL){
+        free_nodes(n->opr[i]);
+        n->opr[i]=NULL;
+        
+    }
+   i++;
    }
-/*
-   if(n->opr[3]!=NULL){
-    free(n->opr[3]);
-        n->opr[3]=NULL;
-    
-   }
-   */
+
     free(n->str);
     n->str=NULL;
     free(n->ident);

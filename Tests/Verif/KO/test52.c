@@ -1,4 +1,4 @@
-//error ligne 5  
+ //error ligne 5
 void main(){
     int b = 3;
     int a = 9;
