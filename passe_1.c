@@ -8,27 +8,134 @@
 #include "common.h"
 #include "string.h"
 
+void verif_declaration_unaire(node_t root){
+    if(root->opr[0]->decl_node==NULL && root->opr[0]->nature==NODE_IDENT){
+            printf("Error line %d: undeclared variable",root->lineno);
+                exit(1); 
+                }
+}
+void verif_decla_binaire(node_t root){
+    if((root->opr[0]->decl_node==NULL && root->opr[0]->nature==NODE_IDENT) || (root->opr[1]->decl_node==NULL&&root->opr[1]->nature==NODE_IDENT)){
+            printf("Error line %d: variable non déclarée\n",root->lineno);
+            exit(1);
+
+       }   
+}
+
+
+void verif_type_unaire(node_t root){
+    if(root->opr[0]->decl_node!=NULL){
+          if(root->opr[0]->decl_node->type!=TYPE_INT){
+            printf("Error line %d: opération unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+          }
+          } 
+          else{
+            if(root->opr[0]->type!=TYPE_INT){
+            printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+
+          }
+          }
+        
+}
+
+void verif_type_unaire_bool(node_t root){
+    if(root->opr[0]->decl_node!=NULL){
+          if(root->opr[0]->decl_node->type!=TYPE_BOOL){
+            printf("Error line %d: opération unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+          }
+          } 
+          else{
+            if(root->opr[0]->type!=TYPE_BOOL){
+            printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
+            exit(-1);
+
+          }
+          }
+        
+}
+
+void verif_condition_bool(node_t root){
+    if(root->opr[1]->type!=TYPE_BOOL){
+            printf("Error line %d: condition booleene nécessaire",root->lineno);
+            exit(-1);
+        }
+
+}
+
+void verif_type_binaire_int(node_t root){
+    if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical ",root->lineno);
+        exit(-1);
+            
+        }
+        }
+
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+            if(root->opr[1]->decl_node!=NULL){
+             if(root->opr[1]->decl_node->type!=TYPE_INT){
+
+                     printf("Error line %d: types should be identical",root->lineno);
+        exit(-1);
+            }
+            }   
+        }
+
+}
+
+void verif_type_binaire_bool(node_t root){
+    if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
+        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+
+        printf("Error line %d: types should be identical in node ",root->lineno);
+        exit(-1);
+            
+        }
+        
+        }
+        if(root->opr[0]->decl_node!=NULL){
+            if(root->opr[0]->decl_node->type!=TYPE_BOOL){
+
+                     printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+        }
+        else{
+            if(root->opr[1]->decl_node!=NULL){
+             if(root->opr[1]->decl_node->type!=TYPE_BOOL){
+                   printf("Error line %d: types should be identical in node",root->lineno);
+        exit(-1);
+            }
+
+        }
+        }
+
+}
+
 static bool global =true; //semaphore pour passer ou non le global_decl du node a true ou false et changé lors de l'entrée dans maindelc
-
-//propager le type oui mais pas partout que ident intval littéraux.
-
-//parcours global parcours local et parcours expr juse global en vrai
-
 
 void parcours_arbre(node_t root){
 
 
-    //printf("%s\n",root->nature);
     if(root==NULL){
         return;
     }
-    printf("%s\t",node_nature2string(root->nature));
-    //printf(" %s \t",node_nature2string(root->nature));
+ 
     
     switch(root->nature){
         case(NODE_LIST):
         
-        //jsp quoi faire considérer comme un sous arbre et traiter list comme le sommet et répéter l'opération
        
         if(root->opr[0]!=NULL){
             root->opr[0]->type=root->type;
@@ -38,7 +145,7 @@ void parcours_arbre(node_t root){
             root->opr[1]->type=root->type;
             parcours_arbre(root->opr[1]);
         
-        } //penser à transmettre le type ici aussi
+        } 
 
             break;
         case(NODE_PROGRAM):
@@ -55,7 +162,7 @@ void parcours_arbre(node_t root){
         break;
 
         case(NODE_DECLS):
-       //peut causer
+      
        if(root->opr[0]->type==TYPE_VOID){
         printf("Error line %d: void is not a valid variable type",root->lineno);
         exit(-1);
@@ -97,7 +204,7 @@ void parcours_arbre(node_t root){
             if(root->opr[1]!=NULL){
 
             root->opr[1]->type=root->type;
-            parcours_arbre(root->opr[1]); //rajouter intval
+            parcours_arbre(root->opr[1]); 
             
             }
             if(root->opr[1]!=NULL){
@@ -157,9 +264,7 @@ void parcours_arbre(node_t root){
         if(root->global_decl==0){
             root->decl_node = get_decl_node(root->ident);
            
-            
-
-            
+                
         }
         
         
@@ -186,10 +291,7 @@ void parcours_arbre(node_t root){
         if(root->opr[3]!=NULL){
         parcours_arbre(root->opr[3]);
         }
-        if(root->opr[1]->type!=TYPE_BOOL){
-            printf("Error line %d: condition booleene nécessaire",root->lineno);
-            exit(-1);
-        }
+        verif_condition_bool(root);
             break;
 
     
@@ -202,10 +304,7 @@ void parcours_arbre(node_t root){
         if(root->opr[2]!=NULL){
         parcours_arbre(root->opr[2]);
         }
-        if(root->opr[0]->type!=TYPE_BOOL){
-            printf("Error line %d: condition de type booleene ", root->lineno);
-            exit(-1);
-        }
+        verif_condition_bool(root);
 
         break;
 
@@ -214,10 +313,7 @@ void parcours_arbre(node_t root){
         if(root->opr[1]!=NULL){
                 parcours_arbre(root->opr[1]);
         }
-        if(root->opr[0]->type!=TYPE_BOOL){
-            printf("Error line %d: condition de type booleene ", root->lineno);
-            exit(-1);
-        }
+        verif_condition_bool(root);
 
         break;
         case(NODE_DOWHILE):
@@ -225,10 +321,7 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
         }
         parcours_arbre(root->opr[1]);
-         if(root->opr[1]->type!=TYPE_BOOL){
-            printf("Error line %d: condition de type booleene ", root->lineno);
-            exit(-1);
-        }
+         verif_condition_bool(root);
         break;
 
         case(NODE_AFFECT):
@@ -249,12 +342,6 @@ void parcours_arbre(node_t root){
 
             }
         
-
-
-        
-            
-        
-
         
         if(root->opr[1]->nature==NODE_IDENT&&root->opr[1]->decl_node==NULL){
 
@@ -281,16 +368,12 @@ void parcours_arbre(node_t root){
                 printf("Error line %d: types should be identical",root->lineno);
                 exit(-1);
             
-        
         }
 
             }
             }
         
-        
-
-
-
+    
         break;
 
         case(NODE_LT):
@@ -298,34 +381,10 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
         root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
         
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-            }   
-        }
-
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
+        
 
         break;
 
@@ -335,34 +394,8 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          
         parcours_arbre(root->opr[1]);
-         if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
 
         break;
@@ -373,34 +406,8 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          
         parcours_arbre(root->opr[1]);
-          if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root); 
 
 
         break;
@@ -409,70 +416,17 @@ void parcours_arbre(node_t root){
         root->type=TYPE_BOOL;
         parcours_arbre(root->opr[0]);
         parcours_arbre(root->opr[1]);
-          if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
-        
-
-
+          
+        verif_decla_binaire(root);  
+        verif_type_binaire_int(root);
         break;
  
         case(NODE_BOR):
         root->type=TYPE_BOOL;
         parcours_arbre(root->opr[0]);
         parcours_arbre(root->opr[1]);
-         if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+         verif_type_binaire_int(root);
 
         break;
 
@@ -488,35 +442,9 @@ void parcours_arbre(node_t root){
          if(root->opr[1]->decl_node!=NULL){
             root->type = root->opr[1]->decl_node->type;
     }
-        
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-            }
-
-        }
+        verif_decla_binaire(root);
+       verif_type_binaire_int(root);
+       
 
 
         break;
@@ -528,34 +456,8 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
 
         break;
@@ -567,34 +469,9 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
         break;
 
         case(NODE_DIV):
@@ -604,39 +481,8 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-                
-       if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-
-        
-            
-        }
-       
-
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);        
+        verif_type_binaire_int(root);
 
     
         
@@ -650,35 +496,8 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-        
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+       verif_type_binaire_int(root);
         break;
 
 
@@ -686,6 +505,7 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
+        verif_decla_binaire(root);
          if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
          if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
         printf("Error line %d: types should be identical",root->lineno);
@@ -693,6 +513,7 @@ void parcours_arbre(node_t root){
             
         }
          }
+
         break;
 
         case(NODE_NE):
@@ -700,6 +521,7 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
+        verif_decla_binaire(root);
         if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
          if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
         printf("Error line %d: types should be identical",root->lineno);
@@ -715,37 +537,9 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
         root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
+        verif_decla_binaire(root);
         
-
-
-        }
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_BOOL){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_BOOL){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
-
-        
-        
+        verif_type_binaire_bool(root);
 
         break;
 
@@ -753,34 +547,8 @@ void parcours_arbre(node_t root){
              parcours_arbre(root->opr[0]);
         root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-
-        }
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_BOOL){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_BOOL){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+       verif_type_binaire_bool(root);
 
         break;
 
@@ -789,35 +557,8 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
-        
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
 
         break;
@@ -825,13 +566,9 @@ void parcours_arbre(node_t root){
         case(NODE_BNOT):
         parcours_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
-        if(root->opr[0]->decl_node!=NULL){
-          if(root->opr[0]->decl_node->type!=TYPE_INT){
-            printf("Error line %d: opération uniquement sur les int",root->lineno);
-            exit(-1);
-            
-        }
-        }
+         verif_declaration_unaire(root);
+            verif_type_unaire(root);
+    
 
 
         break;
@@ -840,36 +577,8 @@ void parcours_arbre(node_t root){
         parcours_arbre(root->opr[0]);
          root->type=TYPE_BOOL;
         parcours_arbre(root->opr[1]);
-        
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
-            
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
         
 
 
@@ -878,29 +587,18 @@ void parcours_arbre(node_t root){
         case(NODE_NOT):
         parcours_arbre(root->opr[0]);
           root->type=TYPE_BOOL;
-        if(root->opr[0]->decl_node!=NULL){
-          if(root->opr[0]->decl_node->type!=TYPE_BOOL){
-            printf("Error line %d: type should be bool",root->lineno);
+          verif_declaration_unaire(root);
+        verif_type_unaire_bool(root);
         
-        exit(-1);
-            
-            
-            
-        }
 
         
-          } 
-          if(root->opr[0]->decl_node==NULL && (root->opr[0]->nature==NODE_IDENT)){
-                printf("Error line %d: undeclared variable",root->lineno);
-                exit(-1); 
-          }
+          verif_declaration_unaire(root);
           if(root->opr[0]->nature==NODE_INTVAL){
             printf("Error line %d: negation of intval not possible  ",root->lineno);
             exit(-1);
           }
           
-        
-        
+             
         break;
 
         case(NODE_SLL):
@@ -911,34 +609,8 @@ void parcours_arbre(node_t root){
            
         parcours_arbre(root->opr[1]);
 
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
-        }
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
             
         
         break;
@@ -949,33 +621,8 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
-
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
-        
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-                if(root->opr[1]->decl_node!=NULL)
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-
-        }
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
         case(NODE_SRA):
          parcours_arbre(root->opr[0]);
@@ -983,59 +630,18 @@ void parcours_arbre(node_t root){
         root->type=root->opr[0]->decl_node->type;
          }
         parcours_arbre(root->opr[1]);
-        if(root->opr[0]->decl_node!=NULL && root->opr[1]->decl_node!=NULL ){
-        if(root->opr[0]->decl_node->type!=root->opr[1]->decl_node->type){
+        verif_decla_binaire(root);
+        verif_type_binaire_int(root);
 
-        printf("Error line %d: types should be identical in node ",root->lineno);
-        exit(-1);
-            
-        }
         
-
-        }
-
-        if(root->opr[0]->decl_node!=NULL){
-            if(root->opr[0]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-        }
-        else{
-            if(root->opr[1]->decl_node!=NULL){
-             if(root->opr[1]->decl_node->type!=TYPE_INT){
-
-                     printf("Error line %d: types should be identical in node",root->lineno);
-        exit(-1);
-            }
-            }
-
-        }
-
 
         break;
 
         case(NODE_UMINUS):
           parcours_arbre(root->opr[0]);
           root->type=root->opr[0]->type;
-          if(root->opr[0]->decl_node==NULL && root->opr[0]->nature==NODE_IDENT){
-            printf("Error line %d: undeclared variable",root->lineno);
-                exit(1); 
-                }
-
-          if(root->opr[0]->decl_node!=NULL){
-          if(root->opr[0]->decl_node->type!=TYPE_INT){
-            printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
-            exit(-1);
-          }
-          } 
-          else{
-            if(root->opr[0]->type!=TYPE_INT){
-            printf("Error line %d: moins unaire sur entier uniquement ",root->lineno);
-            exit(-1);
-
-          }
-          }
+          verif_declaration_unaire(root);
+          verif_type_unaire(root);
            
         break;
 
@@ -1061,13 +667,7 @@ void parcours_arbre(node_t root){
         default:
         break;
     
-        
-
-
     }      
-         
-    
-
     }
 
 extern int trace_level;

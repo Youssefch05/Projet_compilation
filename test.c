@@ -1,3 +1,8 @@
+
+  
 void main(){
-int a = -d;
+   bool c = false;
+   bool d = !c;
+   
+
 }

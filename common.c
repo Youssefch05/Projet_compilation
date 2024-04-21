@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -8,6 +7,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <ctype.h>
 
 #include "defs.h"
 #include "common.h"
@@ -20,10 +20,182 @@ int32_t trace_level = DEFAULT_TRACE_LEVEL;
 extern bool stop_after_syntax;
 extern bool stop_after_verif;
 
-
 void parse_args(int argc, char ** argv) {
-    // A implementer (la ligne suivante est a changer)
-    infile = argv[1];
+    //printf("Nombre d'arguments : %d", argc);
+    //printf(argv[1]);
+    FILE *fichier;
+    infile = NULL;
+    int fichierEntree = 0;
+    int fichierSortie = 0;
+    int v = 0;
+    int s = 0; 
+    int t = 0;
+    int r = 0;
+    
+    //Sans option
+    if(argc == 1){
+        printf("Erreur : Aucun fichier et aucune option en argument.\n");
+        printf("\n");
+        printf("-b: Affiche une bannière indiquant le nom du compliateur et les membres du binome\n");
+        printf("-o <nomFichier>: Definit le nom du fichier assembleur produit\n");
+        printf("-t <int>: Definit le niveau de trace à utiliser entre 0 et 5 compris (0 par default)\n");
+        printf("-r <int>: Definit le nombre maximum de registres à utiliser, entre 4 et 8 (8 par défaut)\n");
+        printf("-s: Arreter la compilation apres l'analyse syntaxique (default = non)\n");
+        printf("-v: Arreter la compilation apres la passe des verification (default = non)\n");
+        printf("-h: Affiche la liste des options\n\n");
+        printf("Les options '-s' et '-v' sont incompatibles\n");
+        printf("-b doit être utilise seul\n");
+
+        exit(1);
+    }
+
+    //Option -b
+    if (strcmp(argv[1],"-b") == 0){
+        if (argc >2){
+            printf("L'option -b s'utilise seule !");
+            printf("\n");
+            exit(1);
+        }
+        for (int i = 0; i < 43; i++){
+            printf("*");
+        }
+        printf("\n");
+        for (int j = 0; j < 2; j++){
+            printf("**");
+            for (int i = 0; i < 39; i++){
+                printf(" ");
+            }
+            printf("**");
+            printf("\n");
+        }
+        printf("**   Youssef Chaoui Aziz, David Lamoot   **\n");
+        printf("**            Juegos  Olympicos          **\n");
+        for (int j = 0; j < 2; j++){
+            printf("**");
+            for (int i = 0; i < 39; i++){
+                printf(" ");
+            }
+            printf("**");
+            printf("\n");
+        }
+        for (int i = 0; i < 43; i++){
+            printf("*");
+        }
+        printf("\n");
+        exit(0);
+    }
+
+    for (int nb_arg = 1; nb_arg < argc; nb_arg++){
+        //Option -h
+        if (strcmp(argv[nb_arg],"-h") == 0){
+            printf("-b: Affiche une bannière indiquant le nom du compliateur et les membres du binome\n");
+            printf("-o: <nomFichier>: Definit le nom du fichier assembleur produit\n");
+            printf("-t: <int>: Definit le niveau de trace à utiliser entre 0 et 5 compris (0 par default)\n");
+            printf("-r: <int>: Definit le nombre maximum de registres à utiliser, entre 4 et 8 (8 par défaut)\n");
+            printf("-s: Arreter la compilation apres l'analyse syntaxique (default = non)\n");
+            printf("-v: Arreter la compilation apres la passe des verification (default = non)\n");
+            printf("-h: Affiche la liste des options\n\n");
+            printf("Les options '-s' et '-v' sont incompatibles\n");
+            printf("-b doit être utilise seul\n");
+            exit(0); //Arret du parsing des arguments
+        }
+
+        //Option -o <nomFichier>
+        else if (strcmp(argv[nb_arg], "-o") == 0){
+            /*if (fichierSortie >0){
+                printf("Erreur : plus d'un fichier de sortie designe\n");
+                exit(1);
+            }*/
+            if((nb_arg+1 == argc) || (argv[nb_arg+1][strlen(argv[nb_arg+1])-2] != '.') || (argv[nb_arg+1][strlen(argv[nb_arg+1])-1] != 's')){
+                printf("Erreur : ligne de commande incorrecte\n");
+                exit(1);
+            }
+            fichierSortie = 1;
+            outfile = argv[nb_arg+1];
+        }
+
+        //Option -t <int>
+        else if (strcmp(argv[nb_arg], "-t") == 0){
+            char alpha = argv[nb_arg+1][strlen(argv[nb_arg+1])-1]; //test si chiffre ou lettre
+            if (t > 0){
+                printf("Erreur : impossible de definir plusieurs fois la trace \n");
+            }
+            else if ((nb_arg+1 == argc) || (atoi(argv[nb_arg+1]) < 0) || (atoi(argv[nb_arg+1]) > 5) || isalpha(alpha)){
+                printf("Erreur : ligne de commande incorrecte\n");
+                exit(1);
+            }
+            else{
+                trace_level = atoi(argv[nb_arg+1]);
+                t = 1;
+            }
+        }
+
+        //Option -r <int>
+        else if (strcmp(argv[nb_arg], "-r") == 0){
+            if (r > 0){
+                printf("Erreur : impossible de definir plusieurs fois le nombre maximum de registres \n");
+                exit(1);
+            }
+            else if ((nb_arg+1 == argc) || (atoi(argv[nb_arg+1]) < 4) || (atoi(argv[nb_arg+1]) > 8)){
+                printf("Erreur : ligne de commande incorrecte\n");
+                exit(1);
+            }
+            else{
+                set_max_registers(atoi(argv[nb_arg+1]));
+                r = 1;
+            }
+        }
+
+        //Option -s
+        else if (strcmp(argv[nb_arg], "-s") == 0){
+            if ((v > 0) || (s>0)){
+                printf("Erreur : ligne de commande incorrecte\n");
+                exit(1);
+            }
+            stop_after_syntax = 1;
+            s = 1;
+        }
+
+        //Option -v
+        else if (strcmp(argv[nb_arg], "-v") == 0){
+            if ((v > 0) || (s>0)){
+                printf("Erreur : ligne de commande incorrecte\n");
+                exit(1);
+            }
+            stop_after_verif = 1;
+            v = 1;
+        }
+
+        //Infile
+        else if ((argv[nb_arg][strlen(argv[nb_arg])-2] == '.')){
+            if ((argv[nb_arg][strlen(argv[nb_arg])-1] == 'c')){
+                if(fichierEntree > 0){
+                    fichierEntree++;
+                }
+                else{
+                infile = argv[nb_arg];
+                fichierEntree = 1;
+                fichier = fopen(infile, "r");
+                if(fichier == NULL){
+                    printf("Le fichier n'existe pas\n");
+                    exit(1);
+                }
+                fclose(fichier);
+                }
+            }
+        } 
+
+
+    }
+    if (infile == NULL){
+        printf("Erreur : aucun fichier en entree\n");
+        exit(1);
+    }
+
+    if (fichierEntree > 1){
+        printf("Erreur : %d fichiers en entrée\n", fichierEntree);
+        exit(1);
+    }
 }
 
 
